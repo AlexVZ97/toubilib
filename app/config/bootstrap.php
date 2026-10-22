@@ -1,36 +1,30 @@
 <?php
 declare(strict_types=1);
 
+use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
-use toubilib\adapters\controllers\actions\AnnulerRendezVousAction;
-use toubilib\adapters\persistence\PgRendezVousRepository;
-use toubilib\application\usecases\RendezVousService;
 
-// ── variables de configuration (fichier config/.env) ──
+// ── 1. variables de configuration (fichier config/.env) ──
 Dotenv\Dotenv::createImmutable(__DIR__, '.env')->safeLoad();
 
-// ── assemblage des objets : injection de dépendances "à la main" ──
-//    (TD1.2 : tout ceci sera déplacé dans le conteneur PHP-DI)
-$pdo = new PDO(
-    "{$_ENV['lib.driver']}:host={$_ENV['lib.host']};dbname={$_ENV['lib.database']}",
-    $_ENV['lib.username'],
-    $_ENV['lib.password'],
-    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-);
-$rdvRepository = new PgRendezVousRepository($pdo);          // adaptateur de sortie
-$rdvService    = new RendezVousService($rdvRepository);    // noyau : reçoit l'interface
-$annulerAction = new AnnulerRendezVousAction($rdvService); // adaptateur d'entrée
+// ── 2. conteneur d'injection de dépendances (PHP-DI, SANS autowiring) ──
+$builder = new ContainerBuilder();
+$builder->useAutowiring(false);
+$builder->addDefinitions(__DIR__ . '/settings.php');
+$builder->addDefinitions(__DIR__ . '/services.php');
+$builder->addDefinitions(__DIR__ . '/api.php');
+$container = $builder->build();
 
-// ── application Slim ──
-$app = AppFactory::create();
+// ── 3. application Slim qui utilise ce conteneur ──
+$app = AppFactory::createFromContainer($container);
+
+// ── 4. middlewares ──
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
+$errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), false, false);
+$errorMiddleware->getDefaultErrorHandler()->forceContentType('application/json');
 
-$errorMiddleware = $app->addErrorMiddleware(true, false, false);
-$errorHandler = $errorMiddleware->getDefaultErrorHandler();
-$errorHandler->forceContentType('application/json');   // erreurs toujours en JSON
-
-// ── routes ──
-$app->post('/rdvs/{id}/annuler', $annulerAction)->setName('rdv-annuler');
+// ── 5. routes ──
+(require __DIR__ . '/routes.php')($app);
 
 return $app;
