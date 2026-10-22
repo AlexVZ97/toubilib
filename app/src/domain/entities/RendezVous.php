@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace toubilib\domain\entities;
 
+use Ramsey\Uuid\Uuid;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
 
 class RendezVous
@@ -18,6 +19,40 @@ class RendezVous
         private ?\DateTimeImmutable $dateCreation = null,
     ) {
         $this->dateCreation = $dateCreation ?? new \DateTimeImmutable();
+    }
+
+    /**
+     * @throws \toubilib\domain\exceptions\MotifVisiteInvalideException
+     * @throws \toubilib\domain\exceptions\HoraireInvalideException
+     * @throws \toubilib\domain\exceptions\PraticienIndisponibleException
+     */
+    public static function creer(
+        Praticien $praticien,
+        Patient $patient,
+        \DateTimeImmutable $debut,
+        string $motif,
+        ?\DateTimeImmutable $maintenant = null,
+    ): self {
+        $duree = $praticien->dureeMotif($motif);
+        $praticien->verifierHoraire($debut, $duree, $maintenant);
+
+        $rdv = new self(
+            id: Uuid::uuid4()->toString(),
+            praticienId: $praticien->getId(),
+            patientId: $patient->getId(),
+            dateHeureDebut: $debut,
+            duree: $duree,
+            motifVisite: $motif,
+        );
+
+        $praticien->verifierDisponibilite($rdv);
+        return $rdv;
+    }
+
+    public function chevauche(RendezVous $autre): bool
+    {
+        return $this->getDateHeureDebut() < $autre->getDateHeureFin()
+            && $autre->getDateHeureDebut() < $this->getDateHeureFin();
     }
 
     /** @throws AnnulationImpossibleException */

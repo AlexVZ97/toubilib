@@ -4,6 +4,8 @@ declare(strict_types=1);
 use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 
+date_default_timezone_set('Europe/Paris');
+
 Dotenv\Dotenv::createImmutable(__DIR__, '.env')->safeLoad();
 
 $builder = new ContainerBuilder();
