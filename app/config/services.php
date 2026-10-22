@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+
+use Psr\Container\ContainerInterface;
+use toubilib\adapters\persistence\PgRendezVousRepository;
+use toubilib\application\ports\api\RendezVousServiceInterface;
+use toubilib\application\ports\spi\RendezVousRepositoryInterface;
+use toubilib\application\usecases\RendezVousService;
+
+return [
+    'toubilib.pdo' => function (ContainerInterface $c): PDO {
+        $db = $c->get('db.config');
+        $dsn = "{$db['driver']}:host={$db['host']};dbname={$db['database']}";
+        return new PDO($dsn, $db['username'], $db['password'], [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+    },
+
+    RendezVousRepositoryInterface::class => function (ContainerInterface $c) {
+        return new PgRendezVousRepository($c->get('toubilib.pdo'));
+    },
+
+    RendezVousServiceInterface::class => function (ContainerInterface $c) {
+        return new RendezVousService($c->get(RendezVousRepositoryInterface::class));
+    },
+];
