@@ -11,29 +11,20 @@ use toubilib\application\ports\api\RendezVousServiceInterface;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
 use toubilib\domain\exceptions\RendezVousNotFoundException;
 
-class AnnulerRendezVousAction
+class AnnulerRendezVousAction extends AbstractAction
 {
-    public function __construct(
-        private RendezVousServiceInterface $rdvService
-    ) {}
+    public function __construct(private RendezVousServiceInterface $rdvService) {}
 
     public function __invoke(Request $rq, Response $rs, array $args): Response
     {
-        $id = $args['id'];
-
         try {
-            $rdv = $this->rdvService->annulerRendezVous($id);
+            $rdv = $this->rdvService->annulerRendezVous($args['id']);
         } catch (RendezVousNotFoundException $e) {
             throw new HttpNotFoundException($rq, $e->getMessage());
         } catch (AnnulationImpossibleException $e) {
             throw (new HttpException($rq, $e->getMessage(), 409))->setTitle('409 Conflict');
         }
 
-        $rs->getBody()->write(json_encode([
-            'type'        => 'ressource',
-            'rendez_vous' => $rdv,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-
-        return $rs->withHeader('Content-Type', 'application/json')->withStatus(200);
+        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv]);
     }
 }

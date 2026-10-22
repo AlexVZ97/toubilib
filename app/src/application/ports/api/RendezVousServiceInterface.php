@@ -7,6 +7,9 @@ use toubilib\application\dto\RendezVousDTO;
 
 interface RendezVousServiceInterface
 {
+    /** @throws \toubilib\domain\exceptions\RendezVousNotFoundException */
+    public function getRendezVous(string $id): RendezVousDTO;
+
     /**
      * @throws \toubilib\domain\exceptions\RendezVousNotFoundException
      * @throws \toubilib\domain\exceptions\AnnulationImpossibleException
