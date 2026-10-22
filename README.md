@@ -48,7 +48,19 @@ Configuration du conteneur : `app/config/settings.php`, `services.php`, `api.php
 | GET | `/praticiens` | Lister les praticiens | 200 |
 | GET | `/praticiens/{id}` | Détail d'un praticien | 200, 404 |
 | GET | `/rdvs/{id}` | Détail d'un RDV | 200, 404 |
+| POST | `/rdvs` | Créer un RDV (body JSON) | 201, 400, 409, 422 |
 | POST | `/rdvs/{id}/annuler` | Annuler un RDV | 200, 404, 409 |
+
+### Exemple : créer un RDV
+
+```bash
+curl -i -X POST http://localhost:7080/rdvs \
+     -H "Content-Type: application/json" \
+     -d '{"praticien_id":"af7bb2f1-cc52-3388-b9bc-c0b89e7f4c5b","patient_id":"d975aca7-50c5-3d16-b211-cf7d302cba50","date_heure_debut":"2026-12-07 10:00","motif_visite":"CO"}'
+```
+
+Motifs : `CI` (consultation initiale, 30 min), `CO` (consultation, 20 min), `CS` (suivi, 15 min).
+Horaires acceptés : du lundi au vendredi, de 8h00 à 19h00.
 
 ## Tableau de bord
 
@@ -58,7 +70,7 @@ Configuration du conteneur : `app/config/settings.php`, `services.php`, `api.php
 | 2 | Détail d'un praticien | ✅ |
 | 3 | Détail d'un RDV | ✅ |
 | 4 | Agenda d'un praticien | ⏳ |
-| 5 | Créer un RDV | ⏳ |
+| 5 | Créer un RDV | ✅ |
 | 6 | Annuler un RDV | ✅ |
 | 7 | Créneaux occupés d'un praticien | ⏳ |
 

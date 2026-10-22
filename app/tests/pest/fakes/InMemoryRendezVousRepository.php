@@ -25,6 +25,14 @@ class InMemoryRendezVousRepository implements RendezVousRepositoryInterface
         return $this->rdvs[$id] ?? throw new RendezVousNotFoundException("Rendez-vous $id introuvable");
     }
 
+    public function findByPraticienEntre(string $praticienId, \DateTimeImmutable $debut, \DateTimeImmutable $fin): array
+    {
+        return array_values(array_filter($this->rdvs, fn(RendezVous $r) =>
+            $r->getPraticienId() === $praticienId
+            && $r->getDateHeureDebut() >= $debut && $r->getDateHeureDebut() < $fin
+        ));
+    }
+
     public function save(RendezVous $rdv): void
     {
         $this->rdvs[$rdv->getId()] = $rdv;

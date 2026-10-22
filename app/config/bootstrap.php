@@ -4,6 +4,9 @@ declare(strict_types=1);
 use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 
+// ── 0. fuseau horaire (sinon PHP dans Docker travaille en UTC) ──
+date_default_timezone_set('Europe/Paris');
+
 // ── 1. variables de configuration (fichier config/.env) ──
 Dotenv\Dotenv::createImmutable(__DIR__, '.env')->safeLoad();
 

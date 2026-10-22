@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace toubilib\domain\entities;
 
+use Ramsey\Uuid\Uuid;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
 
 class RendezVous
@@ -20,7 +21,48 @@ class RendezVous
         $this->dateCreation = $dateCreation ?? new \DateTimeImmutable();
     }
 
-    // ── méthodes métier ─────────────────────────────────────────
+    // ── création validée d'un RDV (TD1.3) ───────────────────────
+
+    /**
+     * Valide la demande et crée un nouveau RDV.
+     * @throws \toubilib\domain\exceptions\MotifVisiteInvalideException
+     * @throws \toubilib\domain\exceptions\HoraireInvalideException
+     * @throws \toubilib\domain\exceptions\PraticienIndisponibleException
+     */
+    public static function creer(
+        Praticien $praticien,
+        Patient $patient,
+        \DateTimeImmutable $debut,
+        string $motif,
+        ?\DateTimeImmutable $maintenant = null,
+    ): self {
+        $duree = $praticien->dureeMotif($motif);                // 1. motif correct ?
+        $praticien->verifierHoraire($debut, $duree, $maintenant); // 2. date/heure acceptables ?
+
+        $rdv = new self(
+            id: Uuid::uuid4()->toString(),
+            praticienId: $praticien->getId(),
+            patientId: $patient->getId(),
+            dateHeureDebut: $debut,
+            duree: $duree,
+            motifVisite: $motif,
+        );
+
+        $praticien->verifierDisponibilite($rdv);                // 3. pas de chevauchement ?
+        return $rdv;
+    }
+
+    /**
+     * Deux RDV se chevauchent si chacun commence avant la fin de l'autre.
+     *   [début1, fin1[  et  [début2, fin2[  se chevauchent  ⇔  début1 < fin2  ET  début2 < fin1
+     */
+    public function chevauche(RendezVous $autre): bool
+    {
+        return $this->getDateHeureDebut() < $autre->getDateHeureFin()
+            && $autre->getDateHeureDebut() < $this->getDateHeureFin();
+    }
+
+    // ── changements d'état ──────────────────────────────────────
 
     /**
      * Annule le RDV.

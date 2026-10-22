@@ -11,5 +11,12 @@ interface RendezVousRepositoryInterface
     /** @throws \toubilib\domain\exceptions\RendezVousNotFoundException */
     public function findById(string $id): RendezVous;
 
+    /**
+     * RDV d'un praticien commençant dans la période [debut, fin[
+     * @return RendezVous[]
+     */
+    public function findByPraticienEntre(string $praticienId, \DateTimeImmutable $debut, \DateTimeImmutable $fin): array;
+
+    /** Crée le RDV s'il n'existe pas, le met à jour sinon. */
     public function save(RendezVous $rdv): void;
 }

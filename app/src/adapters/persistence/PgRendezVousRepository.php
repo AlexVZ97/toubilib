@@ -25,6 +25,22 @@ class PgRendezVousRepository implements RendezVousRepositoryInterface
         return $this->toEntity($row);
     }
 
+    public function findByPraticienEntre(string $praticienId, \DateTimeImmutable $debut, \DateTimeImmutable $fin): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM rdv
+             WHERE praticien_id = :praticien_id
+               AND date_heure_debut >= :debut AND date_heure_debut < :fin
+             ORDER BY date_heure_debut'
+        );
+        $stmt->execute([
+            'praticien_id' => $praticienId,
+            'debut'        => $debut->format('Y-m-d H:i:s'),
+            'fin'          => $fin->format('Y-m-d H:i:s'),
+        ]);
+        return array_map(fn(array $row) => $this->toEntity($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function save(RendezVous $rdv): void
     {
         $data = [
