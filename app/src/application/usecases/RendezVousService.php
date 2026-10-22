@@ -14,6 +14,11 @@ class RendezVousService implements RendezVousServiceInterface
         private RendezVousRepositoryInterface $rdvRepository
     ) {}
 
+    public function getRendezVous(string $id): RendezVousDTO
+    {
+        return RendezVousDTO::fromEntity($this->rdvRepository->findById($id));
+    }
+
     public function annulerRendezVous(string $id): RendezVousDTO
     {
         $rdv = $this->rdvRepository->findById($id);  // RendezVousNotFoundException si absent

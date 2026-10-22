@@ -2,9 +2,13 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
+use toubilib\adapters\persistence\PgPraticienRepository;
 use toubilib\adapters\persistence\PgRendezVousRepository;
+use toubilib\application\ports\api\PraticienServiceInterface;
 use toubilib\application\ports\api\RendezVousServiceInterface;
+use toubilib\application\ports\spi\PraticienRepositoryInterface;
 use toubilib\application\ports\spi\RendezVousRepositoryInterface;
+use toubilib\application\usecases\PraticienService;
 use toubilib\application\usecases\RendezVousService;
 
 /*
@@ -28,9 +32,15 @@ return [
     RendezVousRepositoryInterface::class => function (ContainerInterface $c) {
         return new PgRendezVousRepository($c->get('toubilib.pdo'));
     },
+    PraticienRepositoryInterface::class => function (ContainerInterface $c) {
+        return new PgPraticienRepository($c->get('toubilib.pdo'));
+    },
 
     // ── services métier : port API → classe du usecase ──
     RendezVousServiceInterface::class => function (ContainerInterface $c) {
         return new RendezVousService($c->get(RendezVousRepositoryInterface::class));
+    },
+    PraticienServiceInterface::class => function (ContainerInterface $c) {
+        return new PraticienService($c->get(PraticienRepositoryInterface::class));
     },
 ];

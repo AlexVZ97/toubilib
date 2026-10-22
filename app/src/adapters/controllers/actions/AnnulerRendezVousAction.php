@@ -11,30 +11,21 @@ use toubilib\application\ports\api\RendezVousServiceInterface;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
 use toubilib\domain\exceptions\RendezVousNotFoundException;
 
-/** Adaptateur d'entrée : traduit HTTP  <->  appel au port API du noyau. */
-class AnnulerRendezVousAction
+/** POST /rdvs/{id}/annuler  — fonctionnalité 6 */
+class AnnulerRendezVousAction extends AbstractAction
 {
-    public function __construct(
-        private RendezVousServiceInterface $rdvService
-    ) {}
+    public function __construct(private RendezVousServiceInterface $rdvService) {}
 
     public function __invoke(Request $rq, Response $rs, array $args): Response
     {
-        $id = $args['id'];
-
         try {
-            $rdv = $this->rdvService->annulerRendezVous($id);
+            $rdv = $this->rdvService->annulerRendezVous($args['id']);
         } catch (RendezVousNotFoundException $e) {
-            throw new HttpNotFoundException($rq, $e->getMessage());        // 404
+            throw new HttpNotFoundException($rq, $e->getMessage());                          // 404
         } catch (AnnulationImpossibleException $e) {
-            throw (new HttpException($rq, $e->getMessage(), 409))->setTitle('409 Conflict');
+            throw (new HttpException($rq, $e->getMessage(), 409))->setTitle('409 Conflict'); // 409
         }
 
-        $rs->getBody()->write(json_encode([
-            'type'        => 'ressource',
-            'rendez_vous' => $rdv,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-
-        return $rs->withHeader('Content-Type', 'application/json')->withStatus(200);
+        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv]);
     }
 }

@@ -45,15 +45,18 @@ Configuration du conteneur : `app/config/settings.php`, `services.php`, `api.php
 
 | Méthode | URI | Description | Statuts |
 |---|---|---|---|
+| GET | `/praticiens` | Lister les praticiens | 200 |
+| GET | `/praticiens/{id}` | Détail d'un praticien | 200, 404 |
+| GET | `/rdvs/{id}` | Détail d'un RDV | 200, 404 |
 | POST | `/rdvs/{id}/annuler` | Annuler un RDV | 200, 404, 409 |
 
 ## Tableau de bord
 
 | # | Fonctionnalité | État |
 |---|---|---|
-| 1 | Lister les praticiens | ⏳ |
-| 2 | Détail d'un praticien | ⏳ |
-| 3 | Détail d'un RDV | ⏳ |
+| 1 | Lister les praticiens | ✅ |
+| 2 | Détail d'un praticien | ✅ |
+| 3 | Détail d'un RDV | ✅ |
 | 4 | Agenda d'un praticien | ⏳ |
 | 5 | Créer un RDV | ⏳ |
 | 6 | Annuler un RDV | ✅ |
