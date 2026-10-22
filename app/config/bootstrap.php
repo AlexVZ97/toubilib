@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
+use toubilib\adapters\controllers\middlewares\Cors;
 
 date_default_timezone_set('Europe/Paris');
 
@@ -21,6 +22,7 @@ $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), false, false);
 $errorMiddleware->getDefaultErrorHandler()->forceContentType('application/json');
+$app->add(Cors::class);
 
 (require __DIR__ . '/routes.php')($app);
 

@@ -21,6 +21,6 @@ class GetRendezVousAction extends AbstractAction
             throw new HttpNotFoundException($rq, $e->getMessage());
         }
 
-        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv]);
+        return $this->json($rs, ['type' => 'ressource', ...$this->rdvAvecLiens($rq, $rdv)]);
     }
 }

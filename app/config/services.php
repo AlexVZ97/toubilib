@@ -43,6 +43,7 @@ return [
     RendezVousServiceInterface::class => function (ContainerInterface $c) {
         return new RendezVousService(
             $c->get(RendezVousRepositoryInterface::class),
+            $c->get(PraticienRepositoryInterface::class),
             $c->get(CreateRdvValidator::class),
         );
     },

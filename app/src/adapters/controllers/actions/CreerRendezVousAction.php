@@ -35,7 +35,8 @@ class CreerRendezVousAction extends AbstractAction
             return $this->json($rs, ['message' => $e->getMessage()], 409);
         }
 
-        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv], 201)
-            ->withHeader('Location', "/rdvs/{$rdv->id}");
+        $ressource = $this->rdvAvecLiens($rq, $rdv);
+        return $this->json($rs, ['type' => 'ressource', ...$ressource], 201)
+            ->withHeader('Location', $ressource['links']['self']['href']);
     }
 }

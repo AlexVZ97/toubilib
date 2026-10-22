@@ -5,6 +5,7 @@ namespace toubilib\domain\entities;
 
 use Ramsey\Uuid\Uuid;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
+use toubilib\domain\exceptions\ChangementEtatImpossibleException;
 
 class RendezVous
 {
@@ -71,6 +72,35 @@ class RendezVous
             );
         }
         $this->statut = RendezVousStatut::ANNULE;
+    }
+
+    /** @throws ChangementEtatImpossibleException */
+    public function honorer(?\DateTimeImmutable $maintenant = null): void
+    {
+        $this->terminer(RendezVousStatut::HONORE, $maintenant);
+    }
+
+    /** @throws ChangementEtatImpossibleException */
+    public function ignorer(?\DateTimeImmutable $maintenant = null): void
+    {
+        $this->terminer(RendezVousStatut::IGNORE, $maintenant);
+    }
+
+    private function terminer(RendezVousStatut $nouvelEtat, ?\DateTimeImmutable $maintenant): void
+    {
+        $maintenant = $maintenant ?? new \DateTimeImmutable();
+
+        if ($this->statut !== RendezVousStatut::PREVU) {
+            throw new ChangementEtatImpossibleException(
+                "Le rendez-vous {$this->id} est {$this->statut->name} : il ne peut pas passer à {$nouvelEtat->name}"
+            );
+        }
+        if ($this->dateHeureDebut > $maintenant) {
+            throw new ChangementEtatImpossibleException(
+                "Le rendez-vous {$this->id} n'a pas encore eu lieu : il ne peut pas passer à {$nouvelEtat->name}"
+            );
+        }
+        $this->statut = $nouvelEtat;
     }
 
     public function getId(): string { return $this->id; }

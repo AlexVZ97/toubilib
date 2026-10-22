@@ -21,6 +21,6 @@ class GetPraticienAction extends AbstractAction
             throw new HttpNotFoundException($rq, $e->getMessage());
         }
 
-        return $this->json($rs, ['type' => 'ressource', 'praticien' => $praticien]);
+        return $this->json($rs, ['type' => 'ressource', ...$this->praticienAvecLiens($rq, $praticien)]);
     }
 }
