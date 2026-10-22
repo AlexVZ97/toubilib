@@ -26,6 +26,6 @@ class AnnulerRendezVousAction extends AbstractAction
             throw (new HttpException($rq, $e->getMessage(), 409))->setTitle('409 Conflict'); // 409
         }
 
-        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv]);
+        return $this->json($rs, ['type' => 'ressource', ...$this->rdvAvecLiens($rq, $rdv)]);
     }
 }

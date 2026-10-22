@@ -5,6 +5,7 @@ namespace toubilib\domain\entities;
 
 use Ramsey\Uuid\Uuid;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
+use toubilib\domain\exceptions\ChangementEtatImpossibleException;
 
 class RendezVous
 {
@@ -84,6 +85,42 @@ class RendezVous
             );
         }
         $this->statut = RendezVousStatut::ANNULE;
+    }
+
+    /**
+     * Le patient s'est présenté (fonctionnalité 9).
+     * @throws ChangementEtatImpossibleException
+     */
+    public function honorer(?\DateTimeImmutable $maintenant = null): void
+    {
+        $this->terminer(RendezVousStatut::HONORE, $maintenant);
+    }
+
+    /**
+     * Le patient ne s'est pas présenté (fonctionnalité 9).
+     * @throws ChangementEtatImpossibleException
+     */
+    public function ignorer(?\DateTimeImmutable $maintenant = null): void
+    {
+        $this->terminer(RendezVousStatut::IGNORE, $maintenant);
+    }
+
+    /** Un RDV ne peut être honoré/ignoré que s'il est PREVU et que son heure est arrivée. */
+    private function terminer(RendezVousStatut $nouvelEtat, ?\DateTimeImmutable $maintenant): void
+    {
+        $maintenant = $maintenant ?? new \DateTimeImmutable();
+
+        if ($this->statut !== RendezVousStatut::PREVU) {
+            throw new ChangementEtatImpossibleException(
+                "Le rendez-vous {$this->id} est {$this->statut->name} : il ne peut pas passer à {$nouvelEtat->name}"
+            );
+        }
+        if ($this->dateHeureDebut > $maintenant) {
+            throw new ChangementEtatImpossibleException(
+                "Le rendez-vous {$this->id} n'a pas encore eu lieu : il ne peut pas passer à {$nouvelEtat->name}"
+            );
+        }
+        $this->statut = $nouvelEtat;
     }
 
     // ── getters ─────────────────────────────────────────────────

@@ -5,6 +5,7 @@ use tests\pest\fakes\Fixtures;
 use toubilib\domain\entities\RendezVous;
 use toubilib\domain\entities\RendezVousStatut;
 use toubilib\domain\exceptions\AnnulationImpossibleException;
+use toubilib\domain\exceptions\ChangementEtatImpossibleException;
 use toubilib\domain\exceptions\HoraireInvalideException;
 use toubilib\domain\exceptions\MotifVisiteInvalideException;
 use toubilib\domain\exceptions\PraticienIndisponibleException;
@@ -79,3 +80,30 @@ it('refuse d\'annuler un RDV déjà annulé', function () use ($maintenant) {
 it('refuse d\'annuler un RDV honoré', function () use ($maintenant) {
     Fixtures::rdv('2026-11-02 09:00', statut: RendezVousStatut::HONORE)->annuler($maintenant);
 })->throws(AnnulationImpossibleException::class);
+
+// ── honorer / ignorer ──
+it('honore un RDV dont l\'heure est passée', function () use ($maintenant) {
+    $rdv = Fixtures::rdv('2026-10-19 09:00');
+    $rdv->honorer($maintenant);
+    expect($rdv->getStatut())->toBe(RendezVousStatut::HONORE);
+});
+
+it('ignore un RDV dont l\'heure est passée', function () use ($maintenant) {
+    $rdv = Fixtures::rdv('2026-10-19 09:00');
+    $rdv->ignorer($maintenant);
+    expect($rdv->getStatut())->toBe(RendezVousStatut::IGNORE);
+});
+
+it('refuse d\'honorer un RDV qui n\'a pas encore eu lieu', function () use ($maintenant) {
+    Fixtures::rdv('2026-11-02 09:00')->honorer($maintenant);
+})->throws(ChangementEtatImpossibleException::class);
+
+it('refuse d\'ignorer un RDV annulé', function () use ($maintenant) {
+    Fixtures::rdv('2026-10-19 09:00', statut: RendezVousStatut::ANNULE)->ignorer($maintenant);
+})->throws(ChangementEtatImpossibleException::class);
+
+it('refuse d\'honorer deux fois le même RDV', function () use ($maintenant) {
+    $rdv = Fixtures::rdv('2026-10-19 09:00');
+    $rdv->honorer($maintenant);
+    $rdv->honorer($maintenant);
+})->throws(ChangementEtatImpossibleException::class);

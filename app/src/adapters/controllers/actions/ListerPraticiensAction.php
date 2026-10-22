@@ -19,7 +19,8 @@ class ListerPraticiensAction extends AbstractAction
         return $this->json($rs, [
             'type'       => 'collection',
             'count'      => count($praticiens),
-            'praticiens' => $praticiens,
+            'praticiens' => array_map(fn($p) => $this->praticienAvecLiens($rq, $p), $praticiens),
+            'links'      => ['self' => $this->lien($rq, 'praticiens-liste')],
         ]);
     }
 }

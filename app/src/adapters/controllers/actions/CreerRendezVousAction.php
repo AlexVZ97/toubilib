@@ -39,7 +39,8 @@ class CreerRendezVousAction extends AbstractAction
         }
 
         // 3. 201 Created + en-tête Location vers la nouvelle ressource
-        return $this->json($rs, ['type' => 'ressource', 'rendez_vous' => $rdv], 201)
-            ->withHeader('Location', "/rdvs/{$rdv->id}");
+        $ressource = $this->rdvAvecLiens($rq, $rdv);
+        return $this->json($rs, ['type' => 'ressource', ...$ressource], 201)
+            ->withHeader('Location', $ressource['links']['self']['href']);
     }
 }

@@ -2,24 +2,41 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
+use Slim\Psr7\Factory\ResponseFactory;
+use toubilib\adapters\controllers\actions\AgendaPraticienAction;
 use toubilib\adapters\controllers\actions\AnnulerRendezVousAction;
 use toubilib\adapters\controllers\actions\CreerRendezVousAction;
+use toubilib\adapters\controllers\actions\CreneauxPraticienAction;
 use toubilib\adapters\controllers\actions\GetPraticienAction;
 use toubilib\adapters\controllers\actions\GetRendezVousAction;
+use toubilib\adapters\controllers\actions\HonorerRendezVousAction;
+use toubilib\adapters\controllers\actions\IgnorerRendezVousAction;
 use toubilib\adapters\controllers\actions\ListerPraticiensAction;
+use toubilib\adapters\controllers\middlewares\Cors;
 use toubilib\application\ports\api\PraticienServiceInterface;
 use toubilib\application\ports\api\RendezVousServiceInterface;
 
 /*
- * API : les recettes pour fabriquer les actions Slim (adaptateurs d'entrée).
+ * API : les recettes pour fabriquer les actions et middlewares Slim (adaptateurs d'entrée).
  */
 return [
+    // ── middlewares ──
+    Cors::class => function (ContainerInterface $c) {
+        return new Cors(new ResponseFactory());
+    },
+
     // ── praticiens ──
     ListerPraticiensAction::class => function (ContainerInterface $c) {
         return new ListerPraticiensAction($c->get(PraticienServiceInterface::class));
     },
     GetPraticienAction::class => function (ContainerInterface $c) {
         return new GetPraticienAction($c->get(PraticienServiceInterface::class));
+    },
+    AgendaPraticienAction::class => function (ContainerInterface $c) {
+        return new AgendaPraticienAction($c->get(RendezVousServiceInterface::class));
+    },
+    CreneauxPraticienAction::class => function (ContainerInterface $c) {
+        return new CreneauxPraticienAction($c->get(RendezVousServiceInterface::class));
     },
 
     // ── rendez-vous ──
@@ -31,5 +48,11 @@ return [
     },
     AnnulerRendezVousAction::class => function (ContainerInterface $c) {
         return new AnnulerRendezVousAction($c->get(RendezVousServiceInterface::class));
+    },
+    HonorerRendezVousAction::class => function (ContainerInterface $c) {
+        return new HonorerRendezVousAction($c->get(RendezVousServiceInterface::class));
+    },
+    IgnorerRendezVousAction::class => function (ContainerInterface $c) {
+        return new IgnorerRendezVousAction($c->get(RendezVousServiceInterface::class));
     },
 ];
