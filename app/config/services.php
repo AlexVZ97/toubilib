@@ -5,15 +5,19 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use toubilib\adapters\persistence\PgIndisponibiliteRepository;
 use toubilib\adapters\persistence\PgPatientRepository;
 use toubilib\adapters\persistence\PgPraticienRepository;
 use toubilib\adapters\persistence\PgRendezVousRepository;
+use toubilib\application\ports\api\IndisponibiliteServiceInterface;
 use toubilib\application\ports\api\PatientServiceInterface;
 use toubilib\application\ports\api\PraticienServiceInterface;
 use toubilib\application\ports\api\RendezVousServiceInterface;
+use toubilib\application\ports\spi\IndisponibiliteRepositoryInterface;
 use toubilib\application\ports\spi\PatientRepositoryInterface;
 use toubilib\application\ports\spi\PraticienRepositoryInterface;
 use toubilib\application\ports\spi\RendezVousRepositoryInterface;
+use toubilib\application\usecases\IndisponibiliteService;
 use toubilib\application\usecases\PatientService;
 use toubilib\application\usecases\PraticienService;
 use toubilib\application\usecases\RendezVousService;
@@ -43,6 +47,9 @@ return [
     PatientRepositoryInterface::class => function (ContainerInterface $c) {
         return new PgPatientRepository($c->get('toubilib.pdo'));
     },
+    IndisponibiliteRepositoryInterface::class => function (ContainerInterface $c) {
+        return new PgIndisponibiliteRepository($c->get('toubilib.pdo'));
+    },
 
     CreateRdvValidator::class => function (ContainerInterface $c) {
         return new CreateRdvValidator(
@@ -55,6 +62,7 @@ return [
         return new RendezVousService(
             $c->get(RendezVousRepositoryInterface::class),
             $c->get(PraticienRepositoryInterface::class),
+            $c->get(IndisponibiliteRepositoryInterface::class),
             $c->get(CreateRdvValidator::class),
             $c->get(LoggerInterface::class),
         );
@@ -66,6 +74,14 @@ return [
         return new PatientService(
             $c->get(PatientRepositoryInterface::class),
             $c->get(RendezVousRepositoryInterface::class),
+        );
+    },
+    IndisponibiliteServiceInterface::class => function (ContainerInterface $c) {
+        return new IndisponibiliteService(
+            $c->get(PraticienRepositoryInterface::class),
+            $c->get(IndisponibiliteRepositoryInterface::class),
+            $c->get(RendezVousRepositoryInterface::class),
+            $c->get(LoggerInterface::class),
         );
     },
 ];

@@ -8,6 +8,7 @@ use toubilib\application\dto\CreateRdvDTO;
 use toubilib\application\dto\CreneauDTO;
 use toubilib\application\dto\RendezVousDTO;
 use toubilib\application\ports\api\RendezVousServiceInterface;
+use toubilib\application\ports\spi\IndisponibiliteRepositoryInterface;
 use toubilib\application\ports\spi\PraticienRepositoryInterface;
 use toubilib\application\ports\spi\RendezVousRepositoryInterface;
 use toubilib\application\validators\CreateRdvValidator;
@@ -19,6 +20,7 @@ class RendezVousService implements RendezVousServiceInterface
     public function __construct(
         private RendezVousRepositoryInterface $rdvRepository,
         private PraticienRepositoryInterface $praticienRepository,
+        private IndisponibiliteRepositoryInterface $indisponibiliteRepository,
         private CreateRdvValidator $createRdvValidator,
         private LoggerInterface $logger,
     ) {}
@@ -50,8 +52,12 @@ class RendezVousService implements RendezVousServiceInterface
         [$praticien, $patient] = $this->createRdvValidator->validate($dto);
 
         $debutJournee = $dto->dateHeureDebut->setTime(0, 0);
+        $finJournee = $debutJournee->modify('+1 day');
         $praticien->chargerAgenda(
-            $this->rdvRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $debutJournee->modify('+1 day'))
+            $this->rdvRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $finJournee)
+        );
+        $praticien->chargerIndisponibilites(
+            $this->indisponibiliteRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $finJournee)
         );
 
         $rdv = RendezVous::creer($praticien, $patient, $dto->dateHeureDebut, $dto->motifVisite);

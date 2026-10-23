@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace toubilib\domain\entities;
 
+use Ramsey\Uuid\Uuid;
+use toubilib\domain\exceptions\ConflitAgendaException;
 use toubilib\domain\exceptions\HoraireInvalideException;
+use toubilib\domain\exceptions\IndisponibiliteInvalideException;
 use toubilib\domain\exceptions\MotifVisiteInvalideException;
 use toubilib\domain\exceptions\PraticienIndisponibleException;
 
@@ -16,6 +19,9 @@ class Praticien
 
     /** @var RendezVous[] */
     private array $agenda = [];
+
+    /** @var Indisponibilite[] */
+    private array $indisponibilites = [];
 
     public function __construct(
         private string $id,
@@ -73,9 +79,24 @@ class Praticien
         $this->agenda = $rdvs;
     }
 
+    public function chargerIndisponibilites(array $indisponibilites): void
+    {
+        $this->indisponibilites = $indisponibilites;
+    }
+
     /** @throws PraticienIndisponibleException */
     public function verifierDisponibilite(RendezVous $demande): void
     {
+        foreach ($this->indisponibilites as $indispo) {
+            if ($indispo->chevauche($demande->getDateHeureDebut(), $demande->getDateHeureFin())) {
+                throw new PraticienIndisponibleException(sprintf(
+                    "Le praticien est indisponible du %s au %s%s",
+                    $indispo->getDateDebut()->format('Y-m-d H:i'),
+                    $indispo->getDateFin()->format('Y-m-d H:i'),
+                    $indispo->getMotif() ? " ({$indispo->getMotif()})" : ''
+                ));
+            }
+        }
         foreach ($this->agenda as $rdv) {
             if ($rdv->getStatut() !== RendezVousStatut::ANNULE && $demande->chevauche($rdv)) {
                 throw new PraticienIndisponibleException(sprintf(
@@ -85,6 +106,41 @@ class Praticien
                 ));
             }
         }
+    }
+
+    /**
+     * @throws IndisponibiliteInvalideException  période passée ou fin <= début
+     * @throws ConflitAgendaException            des RDV prévus ou une autre indisponibilité tombent dans la période
+     */
+    public function ajouterIndisponibilite(
+        \DateTimeImmutable $debut,
+        \DateTimeImmutable $fin,
+        ?string $motif = null,
+        ?\DateTimeImmutable $maintenant = null,
+    ): Indisponibilite {
+        $maintenant = $maintenant ?? new \DateTimeImmutable();
+        if ($debut <= $maintenant) {
+            throw new IndisponibiliteInvalideException("Une indisponibilité doit commencer dans le futur");
+        }
+        $indispo = new Indisponibilite(Uuid::uuid4()->toString(), $this->id, $debut, $fin, $motif);
+
+        foreach ($this->indisponibilites as $autre) {
+            if ($autre->chevauche($debut, $fin)) {
+                throw new ConflitAgendaException("Cette période chevauche une indisponibilité existante");
+            }
+        }
+        $rdvsGenants = array_filter($this->agenda, fn(RendezVous $rdv) =>
+            $rdv->getStatut() === RendezVousStatut::PREVU
+            && $indispo->chevauche($rdv->getDateHeureDebut(), $rdv->getDateHeureFin())
+        );
+        if (count($rdvsGenants) > 0) {
+            throw new ConflitAgendaException(
+                count($rdvsGenants) . " RDV prévu(s) pendant cette période : il faut d'abord les annuler"
+            );
+        }
+
+        $this->indisponibilites[] = $indispo;
+        return $indispo;
     }
 
     public function getId(): string { return $this->id; }
@@ -99,4 +155,6 @@ class Praticien
     public function accepteNouveauPatient(): bool { return $this->accepteNouveauPatient; }
     /** @return RendezVous[] */
     public function getAgenda(): array { return $this->agenda; }
+    /** @return Indisponibilite[] */
+    public function getIndisponibilites(): array { return $this->indisponibilites; }
 }

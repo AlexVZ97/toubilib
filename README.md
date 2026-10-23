@@ -17,6 +17,7 @@ docker compose up -d --build
 # 3. créer la base et charger les données
 docker compose exec toubilib.db psql -U <user> -d toubilib -f /var/sql/toubilib.schema.sql
 docker compose exec toubilib.db psql -U <user> -d toubilib -f /var/sql/toubilib.data.sql
+docker compose exec toubilib.db psql -U <user> -d toubilib -f /var/sql/toubilib.indisponibilites.sql
 
 # 4. lancer les tests
 docker compose exec api.toubilib vendor/bin/pest
@@ -55,6 +56,9 @@ Les erreurs sont aussi renvoyées en JSON, avec le statut HTTP adéquat.
 | GET | `/praticiens/{id}` | Détail d'un praticien | 200, 404 |
 | GET | `/praticiens/{id}/rdvs?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ` | Agenda d'un praticien sur une période | 200, 400, 404 |
 | GET | `/praticiens/{id}/creneaux?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ` | Créneaux occupés d'un praticien | 200, 400, 404 |
+| GET | `/praticiens/{id}/indisponibilites` | Indisponibilités en cours / à venir | 200, 404 |
+| POST | `/praticiens/{id}/indisponibilites` | Créer une indisponibilité (body JSON) | 201, 400, 404, 409, 422 |
+| DELETE | `/praticiens/{id}/indisponibilites/{indispoId}` | Supprimer une indisponibilité | 204, 404 |
 | GET | `/patients/{id}` | Détail d'un patient | 200, 404 |
 | GET | `/patients/{id}/rdvs` | Historique des RDV d'un patient | 200, 404 |
 | POST | `/rdvs` | Créer un RDV (body JSON) | 201, 400, 409, 422 |
@@ -73,6 +77,16 @@ curl -i -X POST http://localhost:7080/rdvs \
      -H "Content-Type: application/json" \
      -d '{"praticien_id":"af7bb2f1-cc52-3388-b9bc-c0b89e7f4c5b","patient_id":"d975aca7-50c5-3d16-b211-cf7d302cba50","date_heure_debut":"2026-12-07 10:00","motif_visite":"CO"}'
 ```
+
+### Exemple : déclarer une indisponibilité
+
+```bash
+curl -i -X POST http://localhost:7080/praticiens/af7bb2f1-cc52-3388-b9bc-c0b89e7f4c5b/indisponibilites \
+     -H "Content-Type: application/json" \
+     -d '{"date_debut":"2026-12-21 08:00","date_fin":"2026-12-24 19:00","motif":"Congés"}'
+```
+
+Une indisponibilité ne peut pas recouvrir des RDV prévus (409) ; aucun RDV ne peut être pris pendant une indisponibilité (409).
 
 Motifs : `CI` (consultation initiale, 30 min), `CO` (consultation, 20 min), `CS` (suivi, 15 min).
 Horaires acceptés : du lundi au vendredi, de 8h00 à 19h00.
@@ -114,7 +128,7 @@ Le script `scripts/test-api.sh` envoie une série de requêtes avec `curl` et v�
 | 8 | Rechercher un praticien (spécialité, ville) | ✅ |
 | 9 | Cycle de vie d'un RDV (honoré, ignoré) | ✅ |
 | 10 | Historique des consultations d'un patient | ✅ |
-| 11 | Indisponibilités temporaires d'un praticien | ⏳ |
+| 11 | Indisponibilités temporaires d'un praticien | ✅ |
 
 ### Membres du groupe et réalisations
 
