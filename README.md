@@ -130,6 +130,15 @@ Le script `scripts/test-api.sh` envoie une série de requêtes avec `curl` et v�
 | 10 | Historique des consultations d'un patient | ✅ |
 | 11 | Indisponibilités temporaires d'un praticien | ✅ |
 
-### Membres du groupe et réalisations
+### Membre du groupe et réalisations
 
-- _Nom Prénom_ : …
+Projet réalisé individuellement par **Alejandro Villalobos Zaragoza**.
+
+| Étape | Réalisations |
+|---|---|
+| TD1.1 | Architecture hexagonale, entité `RendezVous`, fonctionnalité 6 (annuler un RDV), tests Pest |
+| TD1.2 | Conteneur PHP-DI sans autowiring (`settings`, `services`, `api`), fonctionnalités 1, 2, 3 |
+| TD1.3 | Création d'un RDV (fonctionnalité 5) : DTO validé avec Respect\\Validation, validateur, règles métier (motif, horaires, chevauchements) |
+| TD1.4 | API RESTful : HATEOAS, fonctionnalités 4 et 7, middleware CORS, script de tests `scripts/test-api.sh` |
+| Fonctionnalités additionnelles | 8 (recherche), 9 (honorer / ignorer), 10 (historique patient), 11 (indisponibilités) |
+| Transverse | Logs Monolog (PSR-3), gestion des erreurs, Docker, README |
