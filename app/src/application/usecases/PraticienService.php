@@ -16,14 +16,24 @@ class PraticienService implements PraticienServiceInterface
 
     public function listerPraticiens(): array
     {
-        return array_map(
-            fn($praticien) => PraticienDTO::fromEntity($praticien),
-            $this->praticienRepository->findAll()
-        );
+        return $this->versDTO($this->praticienRepository->findAll());
+    }
+
+    public function rechercherPraticiens(?string $specialite, ?string $ville): array
+    {
+        if ($specialite === null && $ville === null) {
+            return $this->listerPraticiens();
+        }
+        return $this->versDTO($this->praticienRepository->search($specialite, $ville));
     }
 
     public function getPraticien(string $id): PraticienDetailDTO
     {
         return PraticienDetailDTO::fromEntity($this->praticienRepository->findById($id));
+    }
+
+    private function versDTO(array $praticiens): array
+    {
+        return array_map(fn($p) => PraticienDTO::fromEntity($p), $praticiens);
     }
 }

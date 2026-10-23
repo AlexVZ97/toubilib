@@ -38,6 +38,7 @@ docker compose exec api.toubilib vendor/bin/pest
 | `application/dto` | DTO échangés avec le noyau |
 | `adapters/controllers/actions` | Adaptateurs d'entrée : actions Slim |
 | `adapters/controllers/middlewares` | Middlewares Slim (CORS) |
+| `adapters/controllers/handlers` | Gestionnaire d'erreurs (avec logs) |
 | `adapters/persistence` | Adaptateurs de sortie : repositories PDO |
 
 Configuration du conteneur : `app/config/settings.php`, `services.php`, `api.php` ; routes : `app/config/routes.php`.
@@ -50,9 +51,12 @@ Les erreurs sont aussi renvoyées en JSON, avec le statut HTTP adéquat.
 | Méthode | URI | Description | Statuts |
 |---|---|---|---|
 | GET | `/praticiens` | Lister les praticiens | 200 |
+| GET | `/praticiens?specialite=…&ville=…` | Rechercher des praticiens (texte partiel, sans casse) | 200, 400 |
 | GET | `/praticiens/{id}` | Détail d'un praticien | 200, 404 |
 | GET | `/praticiens/{id}/rdvs?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ` | Agenda d'un praticien sur une période | 200, 400, 404 |
 | GET | `/praticiens/{id}/creneaux?debut=AAAA-MM-JJ&fin=AAAA-MM-JJ` | Créneaux occupés d'un praticien | 200, 400, 404 |
+| GET | `/patients/{id}` | Détail d'un patient | 200, 404 |
+| GET | `/patients/{id}/rdvs` | Historique des RDV d'un patient | 200, 404 |
 | POST | `/rdvs` | Créer un RDV (body JSON) | 201, 400, 409, 422 |
 | GET | `/rdvs/{id}` | Détail d'un RDV | 200, 404 |
 | POST | `/rdvs/{id}/annuler` | Annuler un RDV | 200, 404, 409 |
@@ -73,6 +77,21 @@ curl -i -X POST http://localhost:7080/rdvs \
 Motifs : `CI` (consultation initiale, 30 min), `CO` (consultation, 20 min), `CS` (suivi, 15 min).
 Horaires acceptés : du lundi au vendredi, de 8h00 à 19h00.
 
+### Logs
+
+L'application utilise **Monolog** (via l'interface PSR-3 `LoggerInterface`, injectée par le conteneur).
+Les logs sont écrits dans `app/logs/toubilib.log` :
+
+- `INFO` : événements métier (RDV créé, annulé, honoré, ignoré) ;
+- `NOTICE` : erreurs du client (4xx) ;
+- `ERROR` : erreurs du serveur (5xx), avec l'exception et sa localisation.
+
+Le niveau minimal est réglable dans `app/config/settings.php` (`logs.level`).
+
+```bash
+tail -f app/logs/toubilib.log
+```
+
 ### Tests automatiques de l'API
 
 Le script `scripts/test-api.sh` envoie une série de requêtes avec `curl` et vérifie les statuts HTTP :
@@ -92,9 +111,9 @@ Le script `scripts/test-api.sh` envoie une série de requêtes avec `curl` et v�
 | 5 | Créer un RDV | ✅ |
 | 6 | Annuler un RDV | ✅ |
 | 7 | Créneaux occupés d'un praticien | ✅ |
-| 8 | Rechercher un praticien (spécialité, ville) | ⏳ |
+| 8 | Rechercher un praticien (spécialité, ville) | ✅ |
 | 9 | Cycle de vie d'un RDV (honoré, ignoré) | ✅ |
-| 10 | Historique des consultations d'un patient | ⏳ |
+| 10 | Historique des consultations d'un patient | ✅ |
 | 11 | Indisponibilités temporaires d'un praticien | ⏳ |
 
 ### Membres du groupe et réalisations

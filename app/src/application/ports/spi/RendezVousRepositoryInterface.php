@@ -13,5 +13,8 @@ interface RendezVousRepositoryInterface
     /** @return RendezVous[] */
     public function findByPraticienEntre(string $praticienId, \DateTimeImmutable $debut, \DateTimeImmutable $fin): array;
 
+    /** @return RendezVous[] */
+    public function findByPatient(string $patientId): array;
+
     public function save(RendezVous $rdv): void;
 }

@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 use DI\ContainerBuilder;
+use Psr\Log\LoggerInterface;
 use Slim\Factory\AppFactory;
+use toubilib\adapters\controllers\handlers\LoggingErrorHandler;
 use toubilib\adapters\controllers\middlewares\Cors;
 
 date_default_timezone_set('Europe/Paris');
@@ -20,8 +22,12 @@ $app = AppFactory::createFromContainer($container);
 
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-$errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), false, false);
-$errorMiddleware->getDefaultErrorHandler()->forceContentType('application/json');
+$errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), true, false);
+$errorHandler = new LoggingErrorHandler(
+    $app->getCallableResolver(), $app->getResponseFactory(), $container->get(LoggerInterface::class)
+);
+$errorHandler->forceContentType('application/json');
+$errorMiddleware->setDefaultErrorHandler($errorHandler);
 $app->add(Cors::class);
 
 (require __DIR__ . '/routes.php')($app);

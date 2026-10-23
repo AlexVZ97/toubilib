@@ -24,6 +24,14 @@ class InMemoryPraticienRepository implements PraticienRepositoryInterface
         return array_values($this->praticiens);
     }
 
+    public function search(?string $specialite, ?string $ville): array
+    {
+        return array_values(array_filter($this->praticiens, fn(Praticien $p) =>
+            ($specialite === null || mb_stripos($p->getSpecialite()->getLibelle(), $specialite) !== false)
+            && ($ville === null || mb_stripos($p->getVille(), $ville) !== false)
+        ));
+    }
+
     public function findById(string $id): Praticien
     {
         return $this->praticiens[$id] ?? throw new PraticienNotFoundException("Praticien $id introuvable");

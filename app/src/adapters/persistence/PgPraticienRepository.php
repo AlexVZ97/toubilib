@@ -22,6 +22,25 @@ class PgPraticienRepository implements PraticienRepositoryInterface
         return array_map(fn(array $row) => $this->toEntity($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function search(?string $specialite, ?string $ville): array
+    {
+        $conditions = [];
+        $params = [];
+        if ($specialite !== null) {
+            $conditions[] = 's.libelle ILIKE :specialite';
+            $params['specialite'] = '%' . $specialite . '%';
+        }
+        if ($ville !== null) {
+            $conditions[] = 'p.ville ILIKE :ville';
+            $params['ville'] = '%' . $ville . '%';
+        }
+        $where = $conditions ? ' WHERE ' . implode(' AND ', $conditions) : '';
+
+        $stmt = $this->pdo->prepare(self::SELECT . $where . ' ORDER BY p.nom, p.prenom');
+        $stmt->execute($params);
+        return array_map(fn(array $row) => $this->toEntity($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function findById(string $id): Praticien
     {
         $stmt = $this->pdo->prepare(self::SELECT . ' WHERE p.id = :id');
