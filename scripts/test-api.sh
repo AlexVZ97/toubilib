@@ -41,6 +41,19 @@ date_rdv() {
     printf '%s %02d:%02d' "$jour" $((RANDOM % 10 + 8)) $(( (RANDOM % 4) * 15 ))
 }
 
+# un jour ouvré futur où le praticien n'a NI RDV NI indisponibilité (on demande à l'API elle-même)
+jour_libre() {
+    local essai jour
+    for essai in 1 2 3 4 5 6 7 8 9 10; do
+        jour=$(date_rdv | cut -d' ' -f1)
+        if curl -s "$BASE/praticiens/$1/creneaux?debut=$jour&fin=$jour" | grep -q '"count":0' \
+           && ! curl -s "$BASE/praticiens/$1/indisponibilites" | grep -q "\"date_debut\":\"$jour"; then
+            echo "$jour"; return
+        fi
+    done
+    echo "$jour"
+}
+
 echo "== Praticiens =="
 check "liste des praticiens"            200 GET "/praticiens"
 check "détail d'un praticien"           200 GET "/praticiens/$PRATICIEN"
@@ -79,6 +92,24 @@ check "honorer un RDV futur : refusé"   409 POST "/rdvs/$ID/honorer"
 check "annuler"                         200 POST "/rdvs/$ID/annuler"
 check "annuler une 2e fois : refusé"    409 POST "/rdvs/$ID/annuler"
 check "ignorer un RDV annulé : refusé"  409 POST "/rdvs/$ID/ignorer"
+
+echo "== Indisponibilités (fonctionnalité 11) =="
+J=$(jour_libre "$PRATICIEN")             # un jour ouvré futur, libre pour ce praticien
+INDISPO="{\"date_debut\":\"$J 08:00\",\"date_fin\":\"$J 12:00\",\"motif\":\"Formation\"}"
+check "créer une indisponibilité ($J matin)" 201 POST "/praticiens/$PRATICIEN/indisponibilites" "$INDISPO"
+IND=$(grep -o '"id":"[^"]*"' "$REPONSE" | head -1 | cut -d'"' -f4)
+check "liste des indisponibilités"      200 GET  "/praticiens/$PRATICIEN/indisponibilites"
+check "indisponibilité qui chevauche"   409 POST "/praticiens/$PRATICIEN/indisponibilites" "$INDISPO"
+check "fin avant début"                 422 POST "/praticiens/$PRATICIEN/indisponibilites" "{\"date_debut\":\"$J 12:00\",\"date_fin\":\"$J 08:00\"}"
+check "dates manquantes"                400 POST "/praticiens/$PRATICIEN/indisponibilites" "{}"
+RDV_INDISPO="{\"praticien_id\":\"$PRATICIEN\",\"patient_id\":\"$PATIENT\",\"date_heure_debut\":\"$J 10:00\",\"motif_visite\":\"CO\"}"
+check "RDV pendant l'indisponibilité"   409 POST "/rdvs" "$RDV_INDISPO"
+check "supprimer l'indisponibilité"     204 DELETE "/praticiens/$PRATICIEN/indisponibilites/$IND"
+check "supprimer une 2e fois"           404 DELETE "/praticiens/$PRATICIEN/indisponibilites/$IND"
+check "RDV possible après suppression"  201 POST "/rdvs" "$RDV_INDISPO"
+RDV_ID=$(grep -o '"id":"[^"]*"' "$REPONSE" | head -1 | cut -d'"' -f4)
+check "indisponibilité sur ce RDV"      409 POST "/praticiens/$PRATICIEN/indisponibilites" "$INDISPO"
+check "annuler le RDV (nettoyage)"      200 POST "/rdvs/$RDV_ID/annuler"
 
 echo "== HTTP / CORS =="
 check "méthode non autorisée"           405 DELETE "/praticiens"

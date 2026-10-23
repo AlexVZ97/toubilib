@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace tests\pest\fakes;
 
+use toubilib\domain\entities\Indisponibilite;
 use toubilib\domain\entities\Patient;
 use toubilib\domain\entities\Praticien;
 use toubilib\domain\entities\RendezVous;
@@ -27,5 +28,10 @@ final class Fixtures
                                string $id = 'rdv-1', string $praticienId = 'prat-1', string $patientId = 'pat-1'): RendezVous
     {
         return new RendezVous($id, $praticienId, $patientId, new \DateTimeImmutable($debut), $duree, 'CO', $statut);
+    }
+
+    public static function indispo(string $debut, string $fin, string $id = 'ind-1', string $praticienId = 'prat-1'): Indisponibilite
+    {
+        return new Indisponibilite($id, $praticienId, new \DateTimeImmutable($debut), new \DateTimeImmutable($fin), 'Congés');
     }
 }

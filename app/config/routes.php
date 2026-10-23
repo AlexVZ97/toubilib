@@ -4,6 +4,7 @@ declare(strict_types=1);
 use Slim\App;
 use toubilib\adapters\controllers\actions\AgendaPraticienAction;
 use toubilib\adapters\controllers\actions\AnnulerRendezVousAction;
+use toubilib\adapters\controllers\actions\CreerIndisponibiliteAction;
 use toubilib\adapters\controllers\actions\CreerRendezVousAction;
 use toubilib\adapters\controllers\actions\CreneauxPraticienAction;
 use toubilib\adapters\controllers\actions\GetPatientAction;
@@ -12,7 +13,9 @@ use toubilib\adapters\controllers\actions\GetRendezVousAction;
 use toubilib\adapters\controllers\actions\HistoriquePatientAction;
 use toubilib\adapters\controllers\actions\HonorerRendezVousAction;
 use toubilib\adapters\controllers\actions\IgnorerRendezVousAction;
+use toubilib\adapters\controllers\actions\ListerIndisponibilitesAction;
 use toubilib\adapters\controllers\actions\ListerPraticiensAction;
+use toubilib\adapters\controllers\actions\SupprimerIndisponibiliteAction;
 
 /*
  * ROUTES : méthode HTTP + URI  →  action.
@@ -26,6 +29,14 @@ return function (App $app): void {
     $app->get('/praticiens/{id}', GetPraticienAction::class)->setName('praticien-detail');
     $app->get('/praticiens/{id}/rdvs', AgendaPraticienAction::class)->setName('praticien-agenda');
     $app->get('/praticiens/{id}/creneaux', CreneauxPraticienAction::class)->setName('praticien-creneaux');
+
+    // ── indisponibilités d'un praticien ──
+    $app->get('/praticiens/{id}/indisponibilites', ListerIndisponibilitesAction::class)
+        ->setName('praticien-indisponibilites');
+    $app->post('/praticiens/{id}/indisponibilites', CreerIndisponibiliteAction::class)
+        ->setName('praticien-indisponibilite-creer');
+    $app->delete('/praticiens/{id}/indisponibilites/{indispoId}', SupprimerIndisponibiliteAction::class)
+        ->setName('praticien-indisponibilite-supprimer');
 
     // ── patients ──
     $app->get('/patients/{id}', GetPatientAction::class)->setName('patient-detail');

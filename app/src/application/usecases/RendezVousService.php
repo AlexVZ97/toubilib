@@ -8,6 +8,7 @@ use toubilib\application\dto\CreateRdvDTO;
 use toubilib\application\dto\CreneauDTO;
 use toubilib\application\dto\RendezVousDTO;
 use toubilib\application\ports\api\RendezVousServiceInterface;
+use toubilib\application\ports\spi\IndisponibiliteRepositoryInterface;
 use toubilib\application\ports\spi\PraticienRepositoryInterface;
 use toubilib\application\ports\spi\RendezVousRepositoryInterface;
 use toubilib\application\validators\CreateRdvValidator;
@@ -20,6 +21,7 @@ class RendezVousService implements RendezVousServiceInterface
     public function __construct(
         private RendezVousRepositoryInterface $rdvRepository,
         private PraticienRepositoryInterface $praticienRepository,
+        private IndisponibiliteRepositoryInterface $indisponibiliteRepository,
         private CreateRdvValidator $createRdvValidator,
         private LoggerInterface $logger,          // PSR-3 : on ne dépend pas de Monolog, juste de l'interface
     ) {}
@@ -51,10 +53,15 @@ class RendezVousService implements RendezVousServiceInterface
         // 1. le praticien et le patient existent ? (ValidationException sinon)
         [$praticien, $patient] = $this->createRdvValidator->validate($dto);
 
-        // 2. charger l'agenda du praticien pour la journée demandée (suffisant pour tester les chevauchements)
+        // 2. charger l'agenda et les indisponibilités du praticien pour la journée demandée
+        //    (suffisant pour tester les chevauchements)
         $debutJournee = $dto->dateHeureDebut->setTime(0, 0);
+        $finJournee = $debutJournee->modify('+1 day');
         $praticien->chargerAgenda(
-            $this->rdvRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $debutJournee->modify('+1 day'))
+            $this->rdvRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $finJournee)
+        );
+        $praticien->chargerIndisponibilites(
+            $this->indisponibiliteRepository->findByPraticienEntre($praticien->getId(), $debutJournee, $finJournee)
         );
 
         // 3. le domaine valide les règles métier et crée l'entité

@@ -2,6 +2,7 @@
 
 use Psr\Log\NullLogger;
 use tests\pest\fakes\Fixtures;
+use tests\pest\fakes\InMemoryIndisponibiliteRepository;
 use tests\pest\fakes\InMemoryPatientRepository;
 use tests\pest\fakes\InMemoryPraticienRepository;
 use tests\pest\fakes\InMemoryRendezVousRepository;
@@ -20,11 +21,12 @@ const PRAT = 'af7bb2f1-cc52-3388-b9bc-c0b89e7f4c5b';
 const PAT  = 'd975aca7-50c5-3d16-b211-cf7d302cba50';
 
 /** Service branché sur de FAUX repositories en mémoire (aucune base de données). */
-function serviceRdv(InMemoryRendezVousRepository $rdvRepo): RendezVousService
+function serviceRdv(InMemoryRendezVousRepository $rdvRepo, ?InMemoryIndisponibiliteRepository $indispoRepo = null): RendezVousService
 {
     $praticienRepo = new InMemoryPraticienRepository(Fixtures::praticien(PRAT));
     $validator = new CreateRdvValidator($praticienRepo, new InMemoryPatientRepository(Fixtures::patient(PAT)));
-    return new RendezVousService($rdvRepo, $praticienRepo, $validator, new NullLogger());   // NullLogger : logger qui n'écrit rien
+    return new RendezVousService($rdvRepo, $praticienRepo, $indispoRepo ?? new InMemoryIndisponibiliteRepository(),
+        $validator, new NullLogger());   // NullLogger : logger qui n'écrit rien   // NullLogger : logger qui n'écrit rien
 }
 
 function lundiProchain(string $heure): string
@@ -134,3 +136,17 @@ it('ignore un RDV passé', function () {
 it('refuse d\'honorer un RDV futur', function () {
     serviceRdv(new InMemoryRendezVousRepository(Fixtures::rdv('+2 days')))->honorerRendezVous('rdv-1');
 })->throws(ChangementEtatImpossibleException::class);
+
+// ── indisponibilités (11) ──
+it('refuse un RDV pendant une indisponibilité du praticien', function () {
+    $conges = Fixtures::indispo(lundiProchain('08:00'), lundiProchain('12:00'), praticienId: PRAT);
+    serviceRdv(new InMemoryRendezVousRepository(), new InMemoryIndisponibiliteRepository($conges))
+        ->creerRendezVous(demande());                                  // lundi prochain 10:00
+})->throws(PraticienIndisponibleException::class);
+
+it('accepte un RDV en dehors de l\'indisponibilité', function () {
+    $conges = Fixtures::indispo(lundiProchain('08:00'), lundiProchain('12:00'), praticienId: PRAT);
+    $dto = serviceRdv(new InMemoryRendezVousRepository(), new InMemoryIndisponibiliteRepository($conges))
+        ->creerRendezVous(demande(['date_heure_debut' => lundiProchain('14:00')]));
+    expect($dto->etat)->toBe('PREVU');
+});

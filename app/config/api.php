@@ -5,6 +5,7 @@ use Psr\Container\ContainerInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 use toubilib\adapters\controllers\actions\AgendaPraticienAction;
 use toubilib\adapters\controllers\actions\AnnulerRendezVousAction;
+use toubilib\adapters\controllers\actions\CreerIndisponibiliteAction;
 use toubilib\adapters\controllers\actions\CreerRendezVousAction;
 use toubilib\adapters\controllers\actions\CreneauxPraticienAction;
 use toubilib\adapters\controllers\actions\GetPatientAction;
@@ -13,8 +14,11 @@ use toubilib\adapters\controllers\actions\GetRendezVousAction;
 use toubilib\adapters\controllers\actions\HistoriquePatientAction;
 use toubilib\adapters\controllers\actions\HonorerRendezVousAction;
 use toubilib\adapters\controllers\actions\IgnorerRendezVousAction;
+use toubilib\adapters\controllers\actions\ListerIndisponibilitesAction;
 use toubilib\adapters\controllers\actions\ListerPraticiensAction;
+use toubilib\adapters\controllers\actions\SupprimerIndisponibiliteAction;
 use toubilib\adapters\controllers\middlewares\Cors;
+use toubilib\application\ports\api\IndisponibiliteServiceInterface;
 use toubilib\application\ports\api\PatientServiceInterface;
 use toubilib\application\ports\api\PraticienServiceInterface;
 use toubilib\application\ports\api\RendezVousServiceInterface;
@@ -40,6 +44,17 @@ return [
     },
     CreneauxPraticienAction::class => function (ContainerInterface $c) {
         return new CreneauxPraticienAction($c->get(RendezVousServiceInterface::class));
+    },
+
+    // ── indisponibilités ──
+    ListerIndisponibilitesAction::class => function (ContainerInterface $c) {
+        return new ListerIndisponibilitesAction($c->get(IndisponibiliteServiceInterface::class));
+    },
+    CreerIndisponibiliteAction::class => function (ContainerInterface $c) {
+        return new CreerIndisponibiliteAction($c->get(IndisponibiliteServiceInterface::class));
+    },
+    SupprimerIndisponibiliteAction::class => function (ContainerInterface $c) {
+        return new SupprimerIndisponibiliteAction($c->get(IndisponibiliteServiceInterface::class));
     },
 
     // ── patients ──

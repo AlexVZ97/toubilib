@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\ValidatorBuilder as v;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Routing\RouteContext;
+use toubilib\application\dto\IndisponibiliteDTO;
 use toubilib\application\dto\PatientDTO;
 use toubilib\application\dto\PraticienDTO;
 use toubilib\application\dto\PraticienDetailDTO;
@@ -61,6 +62,19 @@ abstract class AbstractAction
                 'self'     => $this->lien($rq, 'praticien-detail', ['id' => $p->id]),
                 'agenda'   => $this->lien($rq, 'praticien-agenda', ['id' => $p->id]),
                 'creneaux' => $this->lien($rq, 'praticien-creneaux', ['id' => $p->id]),
+                'indisponibilites' => $this->lien($rq, 'praticien-indisponibilites', ['id' => $p->id]),
+            ],
+        ];
+    }
+
+    protected function indisponibiliteAvecLiens(Request $rq, IndisponibiliteDTO $i): array
+    {
+        return [
+            'indisponibilite' => $i,
+            'links' => [
+                'praticien' => $this->lien($rq, 'praticien-detail', ['id' => $i->praticien_id]),
+                'supprimer' => $this->lien($rq, 'praticien-indisponibilite-supprimer',
+                                           ['id' => $i->praticien_id, 'indispoId' => $i->id]),
             ],
         ];
     }

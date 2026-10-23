@@ -28,7 +28,7 @@ interface RendezVousServiceInterface
      * @throws \toubilib\application\exceptions\ValidationException        praticien ou patient inexistant
      * @throws \toubilib\domain\exceptions\MotifVisiteInvalideException     motif inconnu
      * @throws \toubilib\domain\exceptions\HoraireInvalideException         date passée, week-end, hors horaires
-     * @throws \toubilib\domain\exceptions\PraticienIndisponibleException   chevauchement avec un autre RDV
+     * @throws \toubilib\domain\exceptions\PraticienIndisponibleException   chevauchement avec un RDV ou une indisponibilité
      */
     public function creerRendezVous(CreateRdvDTO $dto): RendezVousDTO;
 
