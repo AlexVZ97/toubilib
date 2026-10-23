@@ -1,5 +1,6 @@
 <?php
 
+use Psr\Log\NullLogger;
 use tests\pest\fakes\Fixtures;
 use tests\pest\fakes\InMemoryPatientRepository;
 use tests\pest\fakes\InMemoryPraticienRepository;
@@ -23,7 +24,7 @@ function serviceRdv(InMemoryRendezVousRepository $rdvRepo): RendezVousService
 {
     $praticienRepo = new InMemoryPraticienRepository(Fixtures::praticien(PRAT));
     $validator = new CreateRdvValidator($praticienRepo, new InMemoryPatientRepository(Fixtures::patient(PAT)));
-    return new RendezVousService($rdvRepo, $praticienRepo, $validator);
+    return new RendezVousService($rdvRepo, $praticienRepo, $validator, new NullLogger());   // NullLogger : logger qui n'écrit rien
 }
 
 function lundiProchain(string $heure): string

@@ -8,6 +8,10 @@ declare(strict_types=1);
 return [
     'displayErrorDetails' => true,   // mettre false en production
 
+    // ── logs (Monolog) ──
+    'logs.file'  => __DIR__ . '/../logs/toubilib.log',
+    'logs.level' => \Monolog\Level::Info,   // Debug < Info < Notice < Warning < Error < …
+
     'db.config' => [
         'driver'   => $_ENV['lib.driver'],
         'host'     => $_ENV['lib.host'],

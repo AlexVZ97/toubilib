@@ -50,6 +50,15 @@ check "créneaux occupés"                200 GET "/praticiens/$PRATICIEN_AVEC_R
 check "agenda : date mal formée"        400 GET "/praticiens/$PRATICIEN/rdvs?debut=01-12-2025"
 check "agenda : début après fin"        400 GET "/praticiens/$PRATICIEN/rdvs?debut=2025-12-07&fin=2025-12-01"
 check "agenda : praticien inexistant"   404 GET "/praticiens/$INCONNU/rdvs"
+check "recherche par spécialité"        200 GET "/praticiens?specialite=p%C3%A9diatrie"
+check "recherche par ville"             200 GET "/praticiens?ville=nancy"
+check "recherche spécialité + ville"    200 GET "/praticiens?specialite=ORL&ville=nancy"
+check "recherche : balise HTML refusée" 400 GET "/praticiens?ville=%3Cscript%3E"
+
+echo "== Patients =="
+check "détail d'un patient"             200 GET "/patients/$PATIENT"
+check "historique d'un patient"         200 GET "/patients/$PATIENT/rdvs"
+check "patient inexistant"              404 GET "/patients/$INCONNU/rdvs"
 
 echo "== Création d'un RDV =="
 DATE=$(date_rdv)

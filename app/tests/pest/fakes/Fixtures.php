@@ -24,8 +24,8 @@ final class Fixtures
     }
 
     public static function rdv(string $debut, int $duree = 20, RendezVousStatut $statut = RendezVousStatut::PREVU,
-                               string $id = 'rdv-1', string $praticienId = 'prat-1'): RendezVous
+                               string $id = 'rdv-1', string $praticienId = 'prat-1', string $patientId = 'pat-1'): RendezVous
     {
-        return new RendezVous($id, $praticienId, 'pat-1', new \DateTimeImmutable($debut), $duree, 'CO', $statut);
+        return new RendezVous($id, $praticienId, $patientId, new \DateTimeImmutable($debut), $duree, 'CO', $statut);
     }
 }

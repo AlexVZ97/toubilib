@@ -41,6 +41,13 @@ class PgRendezVousRepository implements RendezVousRepositoryInterface
         return array_map(fn(array $row) => $this->toEntity($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function findByPatient(string $patientId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM rdv WHERE patient_id = :patient_id ORDER BY date_heure_debut DESC');
+        $stmt->execute(['patient_id' => $patientId]);
+        return array_map(fn(array $row) => $this->toEntity($row), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function save(RendezVous $rdv): void
     {
         $data = [

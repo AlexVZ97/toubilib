@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 use DI\ContainerBuilder;
+use Psr\Log\LoggerInterface;
 use Slim\Factory\AppFactory;
+use toubilib\adapters\controllers\handlers\LoggingErrorHandler;
 use toubilib\adapters\controllers\middlewares\Cors;
 
 // ── 0. fuseau horaire (sinon PHP dans Docker travaille en UTC) ──
@@ -25,8 +27,12 @@ $app = AppFactory::createFromContainer($container);
 // ── 4. middlewares ──
 $app->addBodyParsingMiddleware();
 $app->addRoutingMiddleware();
-$errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), false, false);
-$errorMiddleware->getDefaultErrorHandler()->forceContentType('application/json');
+$errorMiddleware = $app->addErrorMiddleware($container->get('displayErrorDetails'), true, false);
+$errorHandler = new LoggingErrorHandler(
+    $app->getCallableResolver(), $app->getResponseFactory(), $container->get(LoggerInterface::class)
+);
+$errorHandler->forceContentType('application/json');
+$errorMiddleware->setDefaultErrorHandler($errorHandler);   // les erreurs sont enregistrées dans logs/toubilib.log
 $app->add(Cors::class);   // ajouté en DERNIER = exécuté en PREMIER : même les réponses d'erreur ont les en-têtes CORS
 
 // ── 5. routes ──

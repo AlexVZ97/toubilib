@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Respect\Validation\ValidatorBuilder as v;
 use Slim\Exception\HttpBadRequestException;
 use Slim\Routing\RouteContext;
+use toubilib\application\dto\PatientDTO;
 use toubilib\application\dto\PraticienDTO;
 use toubilib\application\dto\PraticienDetailDTO;
 use toubilib\application\dto\RendezVousDTO;
@@ -42,6 +43,7 @@ abstract class AbstractAction
         $links = [
             'self'      => $this->lien($rq, 'rdv-detail', ['id' => $rdv->id]),
             'praticien' => $this->lien($rq, 'praticien-detail', ['id' => $rdv->praticien_id]),
+            'patient'   => $this->lien($rq, 'patient-detail', ['id' => $rdv->patient_id]),
         ];
         if ($rdv->etat === 'PREVU') {
             $links['annuler'] = $this->lien($rq, 'rdv-annuler', ['id' => $rdv->id]);
@@ -59,6 +61,17 @@ abstract class AbstractAction
                 'self'     => $this->lien($rq, 'praticien-detail', ['id' => $p->id]),
                 'agenda'   => $this->lien($rq, 'praticien-agenda', ['id' => $p->id]),
                 'creneaux' => $this->lien($rq, 'praticien-creneaux', ['id' => $p->id]),
+            ],
+        ];
+    }
+
+    protected function patientAvecLiens(Request $rq, PatientDTO $p): array
+    {
+        return [
+            'patient' => $p,
+            'links' => [
+                'self'       => $this->lien($rq, 'patient-detail', ['id' => $p->id]),
+                'historique' => $this->lien($rq, 'patient-historique', ['id' => $p->id]),
             ],
         ];
     }

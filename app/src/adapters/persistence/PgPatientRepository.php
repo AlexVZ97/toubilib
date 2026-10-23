@@ -27,6 +27,9 @@ class PgPatientRepository implements PatientRepositoryInterface
             telephone: $row['telephone'],
             email: $row['email'],
             dateNaissance: $row['date_naissance'] ? new \DateTimeImmutable($row['date_naissance']) : null,
+            adresse: $row['adresse'],
+            codePostal: $row['code_postal'],
+            ville: $row['ville'],
         );
     }
 }

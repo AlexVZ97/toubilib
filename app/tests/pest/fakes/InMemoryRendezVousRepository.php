@@ -33,6 +33,13 @@ class InMemoryRendezVousRepository implements RendezVousRepositoryInterface
         ));
     }
 
+    public function findByPatient(string $patientId): array
+    {
+        $rdvs = array_values(array_filter($this->rdvs, fn(RendezVous $r) => $r->getPatientId() === $patientId));
+        usort($rdvs, fn(RendezVous $a, RendezVous $b) => $b->getDateHeureDebut() <=> $a->getDateHeureDebut());
+        return $rdvs;
+    }
+
     public function save(RendezVous $rdv): void
     {
         $this->rdvs[$rdv->getId()] = $rdv;

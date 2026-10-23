@@ -7,12 +7,15 @@ use toubilib\adapters\controllers\actions\AgendaPraticienAction;
 use toubilib\adapters\controllers\actions\AnnulerRendezVousAction;
 use toubilib\adapters\controllers\actions\CreerRendezVousAction;
 use toubilib\adapters\controllers\actions\CreneauxPraticienAction;
+use toubilib\adapters\controllers\actions\GetPatientAction;
 use toubilib\adapters\controllers\actions\GetPraticienAction;
 use toubilib\adapters\controllers\actions\GetRendezVousAction;
+use toubilib\adapters\controllers\actions\HistoriquePatientAction;
 use toubilib\adapters\controllers\actions\HonorerRendezVousAction;
 use toubilib\adapters\controllers\actions\IgnorerRendezVousAction;
 use toubilib\adapters\controllers\actions\ListerPraticiensAction;
 use toubilib\adapters\controllers\middlewares\Cors;
+use toubilib\application\ports\api\PatientServiceInterface;
 use toubilib\application\ports\api\PraticienServiceInterface;
 use toubilib\application\ports\api\RendezVousServiceInterface;
 
@@ -37,6 +40,14 @@ return [
     },
     CreneauxPraticienAction::class => function (ContainerInterface $c) {
         return new CreneauxPraticienAction($c->get(RendezVousServiceInterface::class));
+    },
+
+    // ── patients ──
+    GetPatientAction::class => function (ContainerInterface $c) {
+        return new GetPatientAction($c->get(PatientServiceInterface::class));
+    },
+    HistoriquePatientAction::class => function (ContainerInterface $c) {
+        return new HistoriquePatientAction($c->get(PatientServiceInterface::class));
     },
 
     // ── rendez-vous ──

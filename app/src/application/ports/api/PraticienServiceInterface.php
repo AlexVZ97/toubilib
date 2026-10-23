@@ -12,6 +12,9 @@ interface PraticienServiceInterface
     /** Fonctionnalité 1 — @return PraticienDTO[] */
     public function listerPraticiens(): array;
 
+    /** Fonctionnalité 8 — recherche par spécialité et/ou ville — @return PraticienDTO[] */
+    public function rechercherPraticiens(?string $specialite, ?string $ville): array;
+
     /**
      * Fonctionnalité 2
      * @throws \toubilib\domain\exceptions\PraticienNotFoundException

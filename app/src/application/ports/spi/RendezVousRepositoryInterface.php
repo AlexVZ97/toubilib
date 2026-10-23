@@ -17,6 +17,12 @@ interface RendezVousRepositoryInterface
      */
     public function findByPraticienEntre(string $praticienId, \DateTimeImmutable $debut, \DateTimeImmutable $fin): array;
 
+    /**
+     * Tous les RDV d'un patient, du plus récent au plus ancien
+     * @return RendezVous[]
+     */
+    public function findByPatient(string $patientId): array;
+
     /** Crée le RDV s'il n'existe pas, le met à jour sinon. */
     public function save(RendezVous $rdv): void;
 }

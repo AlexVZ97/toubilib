@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace toubilib\application\usecases;
 
+use Psr\Log\LoggerInterface;
 use toubilib\application\dto\CreateRdvDTO;
 use toubilib\application\dto\CreneauDTO;
 use toubilib\application\dto\RendezVousDTO;
@@ -20,6 +21,7 @@ class RendezVousService implements RendezVousServiceInterface
         private RendezVousRepositoryInterface $rdvRepository,
         private PraticienRepositoryInterface $praticienRepository,
         private CreateRdvValidator $createRdvValidator,
+        private LoggerInterface $logger,          // PSR-3 : on ne dépend pas de Monolog, juste de l'interface
     ) {}
 
     public function getRendezVous(string $id): RendezVousDTO
@@ -60,6 +62,10 @@ class RendezVousService implements RendezVousServiceInterface
 
         // 4. persistance
         $this->rdvRepository->save($rdv);
+        $this->logger->info('RDV créé', [
+            'rdv' => $rdv->getId(), 'praticien' => $praticien->getId(), 'patient' => $patient->getId(),
+            'debut' => $rdv->getDateHeureDebut()->format('Y-m-d H:i'),
+        ]);
 
         return RendezVousDTO::fromEntity($rdv);
     }
@@ -69,6 +75,7 @@ class RendezVousService implements RendezVousServiceInterface
         $rdv = $this->rdvRepository->findById($id);  // RendezVousNotFoundException si absent
         $rdv->annuler();                             // AnnulationImpossibleException si interdit
         $this->rdvRepository->save($rdv);
+        $this->logger->info('RDV annulé', ['rdv' => $id]);
         return RendezVousDTO::fromEntity($rdv);
     }
 
@@ -77,6 +84,7 @@ class RendezVousService implements RendezVousServiceInterface
         $rdv = $this->rdvRepository->findById($id);
         $rdv->honorer();                             // ChangementEtatImpossibleException si interdit
         $this->rdvRepository->save($rdv);
+        $this->logger->info('RDV honoré', ['rdv' => $id]);
         return RendezVousDTO::fromEntity($rdv);
     }
 
@@ -85,6 +93,7 @@ class RendezVousService implements RendezVousServiceInterface
         $rdv = $this->rdvRepository->findById($id);
         $rdv->ignorer();
         $this->rdvRepository->save($rdv);
+        $this->logger->info('RDV ignoré', ['rdv' => $id]);
         return RendezVousDTO::fromEntity($rdv);
     }
 
